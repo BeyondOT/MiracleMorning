@@ -1,10 +1,10 @@
 import express, { Router } from "express";
 import {
-  checkIn,
   logout,
   signIn,
   signUp,
 } from "../controllers/auth.controller";
+import { checkIn } from "../controllers/user.controller";
 
 interface BaseParams {
   id: string;
