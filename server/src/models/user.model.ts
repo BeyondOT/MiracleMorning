@@ -1,6 +1,5 @@
-import { Schema } from "mongoose";
+import { Schema, Types } from "mongoose";
 
-import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import isEmail from "validator/lib/isEmail";
 
@@ -9,7 +8,33 @@ enum Roles {
   User = "User",
 }
 
-const userSchema = new mongoose.Schema(
+interface Achievements {
+  stars: number;
+}
+
+interface Streak {
+  currentStreak: number;
+  highestStreak: number;
+  starStreak: number;
+}
+
+export interface User {
+  _id: Types.ObjectId;
+  pseudo: string;
+  email: string;
+  password: string;
+  picture: string;
+  pictureKey: string;
+  days: Date[];
+  latestCheckIn: Date;
+  streak: Streak;
+  achievements: Achievements;
+  roles: String;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const userSchema = new Schema<User>(
   {
     pseudo: {
       type: String,
@@ -40,20 +65,33 @@ const userSchema = new mongoose.Schema(
     pictureKey: {
       type: String,
     },
-    days: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Day",
-      },
-    ],
+    days: {
+      type: [Date],
+      default: [],
+    },
+    latestCheckIn: {
+      type: Date,
+      default: null,
+    },
     streak: {
-      type: {
-        currentStreak: Number,
-        highestStreak: Number,
+      currentStreak: {
+        type: Number,
+        default: 0,
+      },
+      highestStreak: {
+        type: Number,
+        default: 0,
+      },
+      starStreak: {
+        type: Number,
+        default: 0,
       },
     },
-    stars: {
-      type: Number,
+    achievements: {
+      stars: {
+        type: Number,
+        default: 0,
+      },
     },
     roles: {
       type: String,
@@ -66,18 +104,6 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-userSchema.statics.login = async function (email: string, password: string) {
-  const user = await this.findOne({ email });
-  if (user) {
-    const auth = await bcrypt.compare(password, user.password);
-    if (auth) {
-      return user;
-    }
-    throw Error("Incorrect password");
-  }
-  throw Error("Incorrect e-mail");
-};
+const UserModel = mongoose.model<User>("users", userSchema);
 
-const UserModel = mongoose.model("users", userSchema);
-
-module.exports = UserModel;
+export default UserModel;
