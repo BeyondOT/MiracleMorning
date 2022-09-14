@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
 import bcrypt from "bcrypt";
-import { isValidObjectId, Types } from "mongoose";
+import { Types } from "mongoose";
 import UserModel, { User } from "../models/user.model";
 
 interface UserLogin {
@@ -16,21 +16,34 @@ interface UserRegister {
   password: string;
 }
 
+interface UserInfos {
+  pseudo: string;
+  email: string;
+  id: string;
+}
+
 const maxAge = 3 * 24 * 60 * 60 * 1000;
 
-const createToken = (user: User) => {
+const generateAccessToken = (user: Object) => {
   try {
-    const token: string = jwt.sign(
-      { userId: user._id.toString() },
-      process.env.TOKEN_SECRET,
-      {
-        expiresIn: maxAge,
-      }
-    );
-    return token;
+    const response = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+      expiresIn: "3m",
+    });
+    return response;
   } catch (error) {
     console.log(error);
-    return;
+  }
+};
+
+const generateRefreshToken = (user: Object) => {
+  try {
+    const response = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
+      expiresIn: "1y",
+    });
+
+    return response;
+  } catch (error) {
+    console.log(error);
   }
 };
 
@@ -44,7 +57,6 @@ export const signUp = async (
   req: Request<never, never, UserRegister>,
   res: Response<{ user: Types.ObjectId } | { error: unknown }>
 ) => {
-  console.log(req.body);
   const { pseudo, email, password } = req.body;
 
   try {
@@ -77,16 +89,15 @@ export const signIn = async (
       throw "Incorrect password";
     }
 
-    const token = createToken(user);
-
-    res.cookie("jwt", token, {
+    const userInfos: Object = { id: user._id };
+    const accessToken = generateAccessToken(userInfos);
+    res.cookie("jwt", accessToken, {
       httpOnly: true,
-      maxAge,
+      maxAge: 1000000000000,
       sameSite: "none",
       secure: true,
     });
-
-    return res.status(200).json({ user: user._id });
+    return res.send({ accessToken });
   } catch (error) {
     return res.status(400).send({ error });
   }
@@ -95,4 +106,27 @@ export const signIn = async (
 export const logout = async (req: Request, res: Response) => {
   res.cookie("jwt", "", { maxAge: 1 });
   return res.redirect("/");
+};
+
+export const refreshToken = (req: Request, res: Response) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  if (!token) {
+    return res.sendStatus(401);
+  }
+
+  jwt.verify(token, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+    if (err) {
+      return res.sendStatus(401);
+    }
+    // TODO : check en bdd que le user a toujours les droit et qu'il existe toujours
+    const newUser: JwtPayload = user as JwtPayload;
+    delete newUser.iat;
+    delete newUser.exp;
+
+    const refreshedToken = generateAccessToken(newUser as Object);
+    res.send({
+      accessToken: refreshedToken,
+    });
+  });
 };

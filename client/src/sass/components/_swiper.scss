@@ -1,0 +1,8 @@
+.swiper-slide{
+  padding: 1rem 0.8rem 2.3rem;
+}
+
+.swiper-button-next, .swiper-button-prev{
+  --swiper-navigation-color: var(--clr-blue-200);
+  opacity: 0.6;
+}

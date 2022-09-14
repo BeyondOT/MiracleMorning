@@ -1,10 +1,12 @@
 import express, { Router } from "express";
 import {
   logout,
+  refreshToken,
   signIn,
   signUp,
 } from "../controllers/auth.controller";
-import { checkIn } from "../controllers/user.controller";
+import { checkIn, getUsers } from "../controllers/user.controller";
+import { authenticateToken } from "../middlewares/auth.middleware";
 
 interface BaseParams {
   id: string;
@@ -20,6 +22,8 @@ router.post("/register", signUp);
 router.post("/login", signIn);
 router.get("/logout", logout);
 
-router.patch("/checkin/:id", checkIn);
+router.get("/getUsers", authenticateToken, getUsers);
+router.post("/refreshToken", refreshToken);
+router.patch("/checkin/:id",authenticateToken,checkIn);
 
 export default router;

@@ -2,6 +2,14 @@ import { Request, Response } from "express";
 import { isValidObjectId } from "mongoose";
 import UserModel, { User } from "../models/user.model";
 
+
+export const getUsers = async(req: Request, res: Response) => {
+  const response = await UserModel.find();
+  console.log(response);
+  
+  return res.status(200).json(response);
+}
+
 export const checkIn = async (req: Request<{ id: string }>, res: Response) => {
   if (!isValidObjectId(req.params.id)) {
     return res.status(400).json({ error: "Invalid User Id." });

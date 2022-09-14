@@ -1,56 +1,35 @@
-import React from 'react';
-import logo from './logo.svg';
-import { Counter } from './features/counter/Counter';
-import './App.css';
+import { useEffect } from "react";
+import { Route, Routes } from "react-router";
+import { BrowserRouter } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "./app/hooks";
+import Navbar from "./components/navbar/Navbar";
+import PrivateRoutes from "./components/routes/PrivateRoutes";
+import Auth from "./features/authentication/auth/Auth";
+import { getToken, selectAuth } from "./features/authentication/authSlice";
+import CheckedIn from "./pages/CheckedIn";
+import Home from "./pages/Home";
+import Profile from "./pages/Profile";
+import "./sass/main.scss";
+
 
 function App() {
+  const { token, loading } = useAppSelector(selectAuth);
+
+  const dispatch = useAppDispatch()
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <Counter />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <span>
-          <span>Learn </span>
-          <a
-            className="App-link"
-            href="https://reactjs.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            React
-          </a>
-          <span>, </span>
-          <a
-            className="App-link"
-            href="https://redux.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Redux
-          </a>
-          <span>, </span>
-          <a
-            className="App-link"
-            href="https://redux-toolkit.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Redux Toolkit
-          </a>
-          ,<span> and </span>
-          <a
-            className="App-link"
-            href="https://react-redux.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            React Redux
-          </a>
-        </span>
-      </header>
+
+      <BrowserRouter>
+        <Routes>
+          <Route element={<PrivateRoutes />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/checkedin" element={<CheckedIn />} />
+          </Route>
+          <Route path="/auth" element={<Auth/>} />
+        </Routes>
+      </BrowserRouter>
     </div>
   );
 }

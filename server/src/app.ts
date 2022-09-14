@@ -1,17 +1,33 @@
-import express, { Request, Response } from "express";
+import cookieParser from "cookie-parser";
+import cors, { CorsOptions } from "cors";
+import dotenv from "dotenv";
+import express from "express";
 import "./config/database";
+import { checkUser, requireAuth } from "./middlewares/auth.middleware";
 import dayRoutes from "./routes/day.routes";
 import userRoutes from "./routes/user.routes";
-
-import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
+
+const corsOptions: CorsOptions = {
+  origin: [process.env.CLIENT_URL, process.env.CLIENT_URL_IP],
+  credentials: true,
+  allowedHeaders: ["sessionId", "Content-Type"],
+  exposedHeaders: ["sessionId"],
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  preflightContinue: false,
+};
+app.use(cors(corsOptions));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("Hello");
+// JWT
+app.get("/api/jwtid", (req, res) => {
+  console.log(req.cookies);
+  res.status(200).send(req.cookies.jwt);
 });
 
 // Routes

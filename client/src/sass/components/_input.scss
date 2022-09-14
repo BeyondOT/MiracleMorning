@@ -1,0 +1,11 @@
+input {
+  border: none;
+  border-bottom: 1px solid black;
+  &:focus {
+    border: none;
+    border-bottom: 1px solid black;
+  }
+  &::placeholder{
+    caret-color: transparent;
+  }
+}
