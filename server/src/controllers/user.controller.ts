@@ -11,11 +11,11 @@ export const getUsers = async(req: Request, res: Response) => {
 }
 
 export const checkIn = async (req: Request<{ id: string }>, res: Response) => {
-  if (!isValidObjectId(req.params.id)) {
+  if (!isValidObjectId(req.user.id)) {
     return res.status(400).json({ error: "Invalid User Id." });
   }
   try {
-    let user = await UserModel.findOne({ _id: req.params.id });
+    let user = await UserModel.findOne({ _id: req.user.id });
     if (!user) {
       return res
         .status(400)
@@ -91,4 +91,15 @@ const isYesterday = (date: Date) => {
   }
 
   return false;
+}
+
+// Get user.
+export const getUser = async (req:Request, res: Response) => {
+  try{
+    const user = await UserModel.findOne({_id: req.user.id});
+    return res.status(200).json(user);
+  }catch(error){
+    console.log(error);
+    return res.status(400).json(error);
+  }
 }

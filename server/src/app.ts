@@ -3,8 +3,8 @@ import cors, { CorsOptions } from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import "./config/database";
-import { checkUser, requireAuth } from "./middlewares/auth.middleware";
-import dayRoutes from "./routes/day.routes";
+import { authenticateToken } from "./middlewares/auth.middleware";
+import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
 dotenv.config();
 
@@ -25,14 +25,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // JWT
-app.get("/api/jwtid", (req, res) => {
-  console.log(req.cookies);
+
+app.get("/api/jwtid", authenticateToken, (req, res) => {
   res.status(200).send(req.cookies.jwt);
 });
 
 // Routes
 app.use("/api/user", userRoutes);
-app.use("/api/days", dayRoutes);
+app.use("/api/auth", authRoutes);
 
 app.listen(process.env.PORT, () =>
   console.log(`Server is running on Port ${process.env.PORT}`)

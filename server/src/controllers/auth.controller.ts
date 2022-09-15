@@ -16,31 +16,18 @@ interface UserRegister {
   password: string;
 }
 
-interface UserInfos {
-  pseudo: string;
-  email: string;
-  id: string;
-}
+const maxAge:number = 3 * 24 * 60 * 60 * 1000;
 
-const maxAge = 3 * 24 * 60 * 60 * 1000;
-
-const generateAccessToken = (user: Object) => {
-  try {
-    const response = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-      expiresIn: "3m",
-    });
-    return response;
-  } catch (error) {
-    console.log(error);
+const generateAccessToken = (user: User) => {
+  const theUser: Object = {
+    id: user._id,
+    pseudo: user.pseudo,
+    roles: user.roles
   }
-};
-
-const generateRefreshToken = (user: Object) => {
   try {
-    const response = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
-      expiresIn: "1y",
+    const response = jwt.sign(theUser, process.env.ACCESS_TOKEN_SECRET, {
+      expiresIn: maxAge,
     });
-
     return response;
   } catch (error) {
     console.log(error);
@@ -89,11 +76,10 @@ export const signIn = async (
       throw "Incorrect password";
     }
 
-    const userInfos: Object = { id: user._id };
-    const accessToken = generateAccessToken(userInfos);
+    const accessToken = generateAccessToken(user);
     res.cookie("jwt", accessToken, {
       httpOnly: true,
-      maxAge: 1000000000000,
+      maxAge: maxAge,
       sameSite: "none",
       secure: true,
     });
@@ -108,25 +94,3 @@ export const logout = async (req: Request, res: Response) => {
   return res.redirect("/");
 };
 
-export const refreshToken = (req: Request, res: Response) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-  if (!token) {
-    return res.sendStatus(401);
-  }
-
-  jwt.verify(token, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-    if (err) {
-      return res.sendStatus(401);
-    }
-    // TODO : check en bdd que le user a toujours les droit et qu'il existe toujours
-    const newUser: JwtPayload = user as JwtPayload;
-    delete newUser.iat;
-    delete newUser.exp;
-
-    const refreshedToken = generateAccessToken(newUser as Object);
-    res.send({
-      accessToken: refreshedToken,
-    });
-  });
-};
