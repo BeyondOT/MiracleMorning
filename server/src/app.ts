@@ -26,9 +26,7 @@ app.use(cookieParser());
 
 // JWT
 
-app.get("/api/jwtid", authenticateToken, (req, res) => {
-  res.status(200).send(req.cookies.jwt);
-});
+
 
 // Routes
 app.use("/api/user", userRoutes);

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 import bcrypt from "bcrypt";
 import { Types } from "mongoose";
@@ -16,14 +16,14 @@ interface UserRegister {
   password: string;
 }
 
-const maxAge:number = 3 * 24 * 60 * 60 * 1000;
+const maxAge: number = 3 * 24 * 60 * 60 * 1000;
 
 const generateAccessToken = (user: User) => {
   const theUser: Object = {
     id: user._id,
     pseudo: user.pseudo,
-    roles: user.roles
-  }
+    roles: user.roles,
+  };
   try {
     const response = jwt.sign(theUser, process.env.ACCESS_TOKEN_SECRET, {
       expiresIn: maxAge,
@@ -94,3 +94,6 @@ export const logout = async (req: Request, res: Response) => {
   return res.redirect("/");
 };
 
+export const getJwt = (req: Request, res: Response) => {
+  res.status(200).send(req.cookies.jwt);
+};
