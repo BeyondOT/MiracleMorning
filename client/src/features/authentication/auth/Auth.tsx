@@ -3,7 +3,7 @@ import Login from "../login/Login";
 import Register from "../register/Register";
 import styles from "./auth.module.scss";
 const Auth = () => {
-  const [registered, setRegistered] = useState(false);
+  const [registered, setRegistered] = useState(true);
 
   return (
     <div className={styles.wrapper}>

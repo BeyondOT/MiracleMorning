@@ -1,6 +1,7 @@
+
 const CheckedIn = () => {
   return (
-    <div>CheckedIn</div>
+    <div>checked in</div>
   )
 }
 export default CheckedIn

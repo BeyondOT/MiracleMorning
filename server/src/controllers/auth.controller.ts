@@ -1,9 +1,9 @@
+import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-
-import bcrypt from "bcrypt";
-import { Types } from "mongoose";
+import { MongoServerError } from "mongodb";
 import UserModel, { User } from "../models/user.model";
+import { loginErrors, signUpErrors } from "../utils/errors.utils";
 
 interface UserLogin {
   email: string;
@@ -42,7 +42,7 @@ const hashPassword = async (password: string) => {
 
 export const signUp = async (
   req: Request<never, never, UserRegister>,
-  res: Response<{ user: Types.ObjectId } | { error: unknown }>
+  res: Response
 ) => {
   const { pseudo, email, password } = req.body;
 
@@ -55,9 +55,12 @@ export const signUp = async (
     });
     return res.status(201).json({ user: user._id });
   } catch (error) {
-    console.log(error);
-
-    return res.status(400).json({ error });
+    if (error instanceof MongoServerError) {
+      const errors = signUpErrors(error);
+      return res.status(400).json(errors);
+    } else {
+      return res.status(400).json({ message: "Unexpected error", error });
+    }
   }
 };
 
@@ -69,11 +72,11 @@ export const signIn = async (
   try {
     const user = await UserModel.findOne<User>({ email });
     if (!user) {
-      throw "Invalid Email";
+      throw new Error("Invalid Email");
     }
     const auth = await bcrypt.compare(password, user.password);
     if (!auth) {
-      throw "Incorrect password";
+      throw new Error("Incorrect password");
     }
 
     const accessToken = generateAccessToken(user);
@@ -85,13 +88,17 @@ export const signIn = async (
     });
     return res.send({ accessToken });
   } catch (error) {
-    return res.status(400).send({ error });
+    if (error instanceof Error) {
+      const errors = loginErrors(error);
+      return res.status(400).send(errors);
+    }
+    return res.status(400).json({ error, message: "Unexpected error" });
   }
 };
 
 export const logout = async (req: Request, res: Response) => {
   res.cookie("jwt", "", { maxAge: 1 });
-  return res.redirect("/");
+  return res.status(200).send("Logged out successfully");
 };
 
 export const getJwt = (req: Request, res: Response) => {

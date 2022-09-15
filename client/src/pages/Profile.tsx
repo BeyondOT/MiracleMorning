@@ -1,6 +1,8 @@
+import CheckInProfile from "../features/CheckIn/checkInProfile/CheckInProfile"
+
 const Profile = () => {
   return (
-    <div>Profile</div>
+    <div><CheckInProfile/></div>
   )
 }
 export default Profile

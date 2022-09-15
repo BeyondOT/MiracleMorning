@@ -1,39 +1,71 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import {
+  createAsyncThunk,
+  createSlice,
+  SerializedError,
+} from "@reduxjs/toolkit";
+import { AxiosError } from "axios";
 import { RootState } from "../../app/store";
-import { UserLogin, UserRegister } from "./auth.types";
+import { UserLogin, UserLoginErrors, UserRegister, UserRegisterErrors } from "./auth.types";
 
 import * as authAPI from "./authAPI";
 
 export interface AuthState {
   token: string;
   loading: boolean;
-  errors: boolean;
+  errors: SerializedError;
 }
 
 const initialState: AuthState = {
-  token:"",
+  token: "",
   loading: false,
-  errors: false,
+  errors: {} as SerializedError,
 };
 
-export const getToken = createAsyncThunk("user/fetchToken", async () => {
+export const getToken = createAsyncThunk("auth/fetchToken", async () => {
   const res = await authAPI.fetchToken(); // The value we return becomes the `fulfilled` action payload
   return res.data;
 });
 
+export const logout = createAsyncThunk("auth/logout", async () => {
+  const res = await authAPI.logout(); // The value we return becomes the `fulfilled` action payload
+  return res.data;
+});
+
 export const register = createAsyncThunk(
-  "user/register",
-  async (data: UserRegister) => {
-    const res = await authAPI.register(data);
-    return res.data;
+  "auth/register",
+  async (data: UserRegister, { rejectWithValue }) => {
+    try {
+      const res = await authAPI.register(data);
+      return res.data;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        return rejectWithValue(error.response?.data as UserRegisterErrors);
+      } else {
+        return rejectWithValue({
+          name: "Unexcpected Error",
+          message: "An Unexpected error occured",
+        });
+      }
+    }
   }
 );
 
 export const signIn = createAsyncThunk(
-  "user/login",
-  async (data: UserLogin) => {
-    const res = await authAPI.login(data);
-    return res.data;
+  "auth/login",
+  async (data: UserLogin, { rejectWithValue }) => {
+    try {
+      const res = await authAPI.login(data);
+      return res.data;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        return rejectWithValue(error.response?.data as UserLoginErrors);
+      } else {
+        return rejectWithValue({
+          name: "Unexcpected Error",
+          message: "An Unexpected error occured",
+        });
+      }
+    }
   }
 );
 
@@ -46,15 +78,14 @@ export const authSlice = createSlice({
       // sign in
       .addCase(signIn.pending, (state) => {
         state.loading = true;
-        state.errors = false;
       })
       .addCase(signIn.fulfilled, (state, action) => {
         state.loading = false;
         state.token = action.payload;
       })
-      .addCase(signIn.rejected, (state) => {
+      .addCase(signIn.rejected, (state, action) => {
         state.loading = false;
-        state.errors = true;
+        state.errors = action.error;
       })
       // register
       .addCase(register.pending, (state) => {
@@ -63,8 +94,9 @@ export const authSlice = createSlice({
       .addCase(register.fulfilled, (state, action) => {
         state.loading = false;
       })
-      .addCase(register.rejected, (state) => {
+      .addCase(register.rejected, (state, action) => {
         state.loading = false;
+        state.errors = action.error;
       })
       // Token reducers
       .addCase(getToken.pending, (state) => {
@@ -76,7 +108,11 @@ export const authSlice = createSlice({
       })
       .addCase(getToken.rejected, (state) => {
         state.loading = false;
-      });
+      })
+      // Logout
+      .addCase(logout.fulfilled, (state) => {
+        state.token = "";
+      })
   },
 });
 

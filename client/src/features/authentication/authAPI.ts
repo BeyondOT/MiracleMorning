@@ -12,4 +12,7 @@ export const login = async (data: UserLogin) =>
 export const register = async (data: UserRegister) =>
   await API.post<string>(`/auth/register`, data);
 
+export const logout = async () =>
+  await API.get(`/auth/logout`);
+
 export const fetchToken = async () => await API.get<string>(`/auth/jwtid`);

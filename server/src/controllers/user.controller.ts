@@ -15,7 +15,7 @@ export const checkIn = async (req: Request<{ id: string }>, res: Response) => {
     return res.status(400).json({ error: "Invalid User Id." });
   }
   try {
-    let user = await UserModel.findOne({ _id: req.user.id });
+    let user = await UserModel.findOne({ _id: req.user.id }).select("-password");
     if (!user) {
       return res
         .status(400)
@@ -96,7 +96,7 @@ const isYesterday = (date: Date) => {
 // Get user.
 export const getUser = async (req:Request, res: Response) => {
   try{
-    const user = await UserModel.findOne({_id: req.user.id});
+    const user = await UserModel.findOne({_id: req.user.id}).select("-password");
     return res.status(200).json(user);
   }catch(error){
     console.log(error);
